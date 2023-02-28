@@ -1,0 +1,8 @@
+# log-level: debug
+# log-format: json
+
+sample-command:
+  flag1: true
+  flag2: bla
+  flag3: 60s
+
