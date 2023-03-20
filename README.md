@@ -7,7 +7,7 @@ A basic template to get started with creating a command-based cli application in
 > Delete or replace Setup section with something relevant for your application after you set up the project.
 
 1. Clone this repo
-2. Replace : `find -exec sed -i -E -e 's/GIT_OWNER/iamowner/g' -e 's/GIT_PROJECT/myproject/g' {} \;`
+2. Replace : `find -type f -exec sed -i -E -e 's/GIT_OWNER/iamowner/g' -e 's/GIT_PROJECT/myproject/g' {} \;`
 
 ## Run It 🏃
 

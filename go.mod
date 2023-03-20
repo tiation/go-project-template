@@ -1,10 +1,10 @@
 module github.com/GIT_OWNER/GIT_PROJECT
 
-go 1.19
+go 1.20
 
 require (
 	github.com/spf13/cobra v1.6.1
-	github.com/thedataflows/go-commons v1.0.0
+	github.com/thedataflows/go-commons v1.2.0
 )
 
 require (
