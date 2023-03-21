@@ -17,9 +17,9 @@ const (
 )
 
 var (
-	requiredSetFlags = []string{keyCommonFlag1, keySampleCommandFlag3}
+	requiredSampleCommandFlags = []string{keyCommonFlag1, keySampleCommandFlag3}
 
-	setSampleCmmand = &cobra.Command{
+	cmdSampleCommand = &cobra.Command{
 		Use:     "sample-command",
 		Short:   "This is a sample command",
 		Long:    ``,
@@ -29,19 +29,19 @@ var (
 )
 
 func init() {
-	rootCmd.AddCommand(setSampleCmmand)
+	rootCmd.AddCommand(cmdSampleCommand)
 
-	setSampleCmmand.Flags().Bool(keySampleCommandFlag1, false, "Boolean flag")
-	setSampleCmmand.Flags().StringP(keySampleCommandFlag2, "s", "", "[Local Mandatory] StringP flag")
-	setSampleCmmand.Flags().Duration(keySampleCommandFlag3, 10, "Duration flag")
+	cmdSampleCommand.Flags().Bool(keySampleCommandFlag1, false, "Boolean flag")
+	cmdSampleCommand.Flags().StringP(keySampleCommandFlag2, "s", "", "[Local Mandatory] StringP flag")
+	cmdSampleCommand.Flags().Duration(keySampleCommandFlag3, 10, "Duration flag")
 
-	config.ViperBindPFlagSet(setSampleCmmand, nil)
+	config.ViperBindPFlagSet(cmdSampleCommand, nil)
 }
 
 // RunSampleCommand does some things when you run "sample-command"
 func RunSampleCommand(cmd *cobra.Command, args []string) {
 	// Validations
-	config.CheckRequiredFlags(cmd, requiredSetFlags)
+	config.CheckRequiredFlags(cmd, requiredSampleCommandFlags)
 
 	flag2Value := config.ViperGetString(cmd, keySampleCommandFlag2)
 	if len(flag2Value) == 0 {
