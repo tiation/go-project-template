@@ -11,7 +11,7 @@ archives:
 builds:
   - env:
       - CGO_ENABLED=0
-      # - GO111MODULE=on
+      - GO111MODULE=on
     goos:
       - linux
       - darwin
@@ -19,8 +19,8 @@ builds:
     goarch:
       - amd64
       # - arm64
-    # flags:
-    #   - -mod=readonly
+    flags:
+      - -mod=readonly
     ldflags:
       - -s
       - -w
