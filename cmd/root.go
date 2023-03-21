@@ -30,7 +30,7 @@ var (
 				configOpts.EnvPrefix,
 				configOpts.EnvPrefix,
 			)
-			cmd.Help()
+			_ = cmd.Help()
 		},
 	}
 

@@ -49,11 +49,12 @@ func RunSampleCommand(cmd *cobra.Command, args []string) {
 	}
 
 	log.Infof(
-		"Flags:\n--%s=%s\n--%s=%s\n--%s=%v",
+		"Flags:\n--%s=%s\n--%s=%s\n--%s=%v\nargs: %#v",
 		keySampleCommandFlag1, keySampleCommandFlag2, keySampleCommandFlag3,
 		config.ViperGetString(cmd, keySampleCommandFlag1),
 		flag2Value,
 		config.ViperGetDuration(cmd, keySampleCommandFlag3),
+		args,
 	)
 
 	// Some more logic
