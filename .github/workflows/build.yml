@@ -19,7 +19,7 @@ jobs:
 
       - name: Get dependencies
         env:
-          GOPATH: .
+          GOPATH: ${{ github.workspace }}
         run: |
           go get -v -t -d ./...
           if [ -f Gopkg.toml ]; then
