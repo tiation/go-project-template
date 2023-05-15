@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/spf13/cobra v1.6.1
-	github.com/thedataflows/go-commons v1.3.1
+	github.com/thedataflows/go-commons v1.3.4
 )
 
 require (
