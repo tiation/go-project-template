@@ -6,6 +6,9 @@ archives:
         format: zip
     files:
       - README.md
+      - sample-defaults.yaml
+      - src: scripts/run.sh
+        dst: run.sh
     name_template: "{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}"
     rlcp: true
 builds:
@@ -21,6 +24,7 @@ builds:
       # - arm64
     flags:
       - -mod=readonly
+      - -trimpath
     ldflags:
       - -s
       - -w

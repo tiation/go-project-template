@@ -4,58 +4,135 @@ Copyright © 2023 Dataflows
 package cmd
 
 import (
-	"github.com/thedataflows/go-commons/pkg/config"
-	"github.com/thedataflows/go-commons/pkg/log"
+	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/thedataflows/go-commons/pkg/config"
+	"github.com/thedataflows/go-commons/pkg/defaults"
+	"github.com/thedataflows/go-commons/pkg/log"
 )
 
-const (
-	keySampleCommandFlag1 = "flag1"
-	keySampleCommandFlag2 = "flag2"
-	keySampleCommandFlag3 = "flag3"
-)
+type SampleCommand struct {
+	cmd    *cobra.Command
+	parent *Root
+}
 
 var (
-	requiredSampleCommandFlags = []string{keyCommonFlag1, keySampleCommandFlag3}
-
-	cmdSampleCommand = &cobra.Command{
-		Use:     "sample-command",
-		Short:   "This is a sample command",
-		Long:    ``,
-		Aliases: []string{"s"},
-		Run:     RunSampleCommand,
-	}
+	_ = NewSampleCommand(root)
 )
 
 func init() {
-	rootCmd.AddCommand(cmdSampleCommand)
 
-	cmdSampleCommand.Flags().Bool(keySampleCommandFlag1, false, "Boolean flag")
-	cmdSampleCommand.Flags().StringP(keySampleCommandFlag2, "s", "", "[Local Mandatory] StringP flag")
-	cmdSampleCommand.Flags().Duration(keySampleCommandFlag3, 10, "Duration flag")
-
-	config.ViperBindPFlagSet(cmdSampleCommand, nil)
 }
 
-// RunSampleCommand does some things when you run "sample-command"
-func RunSampleCommand(cmd *cobra.Command, args []string) {
-	// Validations
-	config.CheckRequiredFlags(cmd, requiredSampleCommandFlags)
-
-	flag2Value := config.ViperGetString(cmd, keySampleCommandFlag2)
-	if len(flag2Value) == 0 {
-		log.Fatalf("Please set --%v", keySampleCommandFlag2)
+func NewSampleCommand(parent *Root) *SampleCommand {
+	c := &SampleCommand{
+		parent: parent,
 	}
 
-	log.Infof(
-		"Flags:\n--%s=%s\n--%s=%s\n--%s=%v\nargs: %#v",
-		keySampleCommandFlag1, keySampleCommandFlag2, keySampleCommandFlag3,
-		config.ViperGetString(cmd, keySampleCommandFlag1),
-		flag2Value,
-		config.ViperGetDuration(cmd, keySampleCommandFlag3),
-		args,
+	c.cmd = &cobra.Command{
+		Use:           "sample-command",
+		Short:         "This is a sample command",
+		Long:          ``,
+		Aliases:       []string{"c"},
+		RunE:          c.RunCommand,
+		SilenceErrors: parent.Cmd().SilenceErrors,
+		SilenceUsage:  parent.Cmd().SilenceUsage,
+	}
+	parent.Cmd().AddCommand(c.cmd)
+
+	c.cmd.PersistentFlags().StringP(
+		c.KeyStringFlag1(),
+		"c",
+		c.DefaultStringFlag1(),
+		"[Required] A flag called Flag1",
 	)
 
+	c.cmd.PersistentFlags().StringP(
+		c.KeySomePath(),
+		"p",
+		c.DefaultSomePath(),
+		"Some path flag",
+	)
+
+	defaultTimeout, _ := time.ParseDuration("10m0s")
+	c.cmd.PersistentFlags().DurationP(
+		c.KeyTimeout(),
+		"t",
+		defaultTimeout,
+		"Some timeout flag",
+	)
+
+	// Bind flags to config
+	config.ViperBindPFlagSet(c.cmd, c.cmd.PersistentFlags())
+
+	return c
+}
+
+func (c *SampleCommand) RunCommand(cmd *cobra.Command, args []string) error {
+	if err := c.CheckRequiredFlags(); err != nil {
+		return err
+	}
+
+	log.Warnf("Running %s with #%d arguments", cmd.Name(), len(args))
+	log.Warnf("--%s=%s", c.KeyStringFlag1(), c.StringFlag1())
+	log.Warnf("--%s=%s", c.KeySomePath(), c.SomePath())
+	log.Warnf("--%s=%s", c.KeyTimeout(), c.Timeout())
+	log.Warnf("Stdin: %s", stdInBytes)
+
 	// Some more logic
+
+	return nil
+}
+
+func (c *SampleCommand) Cmd() *cobra.Command {
+	return c.cmd
+}
+
+func (c *SampleCommand) CheckRequiredFlags() error {
+	return config.CheckRequiredFlags(c.cmd, []string{c.KeyStringFlag1()})
+}
+
+// Flags keys, defaults and value getters
+func (c *SampleCommand) KeyStringFlag1() string {
+	const f = "flag1"
+	return f
+}
+
+func (c *SampleCommand) DefaultStringFlag1() string {
+	return defaults.Undefined
+}
+
+func (c *SampleCommand) StringFlag1() string {
+	return config.ViperGetString(c.cmd, c.KeyStringFlag1())
+}
+
+func (c *SampleCommand) KeySomePath() string {
+	return "some-path"
+}
+
+func (c *SampleCommand) DefaultSomePath() string {
+	return fmt.Sprintf("./samplecommand-%s", c.DefaultStringFlag1())
+}
+
+func (c *SampleCommand) SomePath() string {
+	samplecommandSomePath := config.ViperGetString(c.cmd, c.KeySomePath())
+	if samplecommandSomePath == c.DefaultSomePath() {
+		samplecommandSomePath = fmt.Sprintf(
+			"%s/samplecommand-%s",
+			c.parent.ProjectRoot(),
+			c.StringFlag1(),
+		)
+	}
+	return samplecommandSomePath
+}
+
+func (c *SampleCommand) KeyTimeout() string {
+	const t = "timeout"
+	return t
+}
+
+func (c *SampleCommand) Timeout() string {
+	return config.ViperGetDuration(c.cmd, c.KeyTimeout()).String()
 }

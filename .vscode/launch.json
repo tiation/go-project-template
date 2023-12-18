@@ -5,6 +5,9 @@
     "version": "0.2.0",
     "configurations": [
         {
+            // "env": {
+            //     "MYPREFIX_SAMPLE_COMMAND_FLAG1": "test",
+            // },
             "name": "Launch",
             "type": "go",
             "request": "launch",

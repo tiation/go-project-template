@@ -2,7 +2,7 @@
 
 MAKEFLAGS += --silent
 
-GOLANGCI_LINT_VERSION = v1.52.2
+GOLANGCI_LINT_VERSION = v1.55.2
 
 all: help
 
@@ -18,7 +18,7 @@ help:
 
 ## build: build
 build:
-	bash ./scripts/local-build.sh
+	goreleaser build --snapshot --clean --single-target
 
 ## lint: Lint with golangci-lint
 lint:
@@ -31,7 +31,8 @@ fmt:
 
 # tidy: Tidy with go mod tidy
 tidy:
-	go mod tidy -compat=1.20
+	go mod tidy
+	go mod vendor
 
 ## pre-commit: Chain lint + test
 pre-commit: test lint

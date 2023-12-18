@@ -1,5 +1,6 @@
 package constants
 
 const (
-	ViperEnvPrefix = "MYPREFIX"
+	EnvPrefix         = "MYPREFIX"
+	DefaultConfigName = "sample-defaults"
 )

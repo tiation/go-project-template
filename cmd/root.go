@@ -5,22 +5,64 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"strings"
 
 	"github.com/GIT_OWNER/GIT_PROJECT/pkg/constants"
 	"github.com/thedataflows/go-commons/pkg/config"
+	"github.com/thedataflows/go-commons/pkg/file"
+	"github.com/thedataflows/go-commons/pkg/log"
+	"github.com/thedataflows/go-commons/pkg/process"
 
 	"github.com/spf13/cobra"
 )
 
-const (
-	keyCommonFlag1 = "flag1"
-	keyCommonFlag2 = "flag2"
-)
+type Root struct {
+	cmd *cobra.Command
+}
 
 var (
-	// rootCmd represents the base command when called without any subcommands
-	rootCmd = &cobra.Command{
+	root = NewRoot()
+
+	stdInBytes []byte
+)
+
+func init() {
+	stat, err := os.Stdin.Stat()
+	mode := stat.Mode() & os.ModeNamedPipe
+	if err == nil && mode == os.ModeNamedPipe {
+		stdInBytes, _ = io.ReadAll(os.Stdin)
+	}
+}
+
+// Execute adds all child commands to the root command and sets flags appropriately.
+// This is called by main.main(). It only needs to happen once to the rootCmd.
+func Execute() {
+	// errors.MaxStackDepth = 20
+	if err := root.Cmd().Execute(); err != nil {
+		log.Fatal(log.ErrWithTrace(err))
+	}
+}
+
+func NewRoot() *Root {
+	configOpts, err := config.NewOptions(
+		config.WithEnvPrefix(constants.EnvPrefix),
+		config.WithConfigName(constants.DefaultConfigName),
+		config.WithUserConfigPaths(
+			[]string{
+				process.CurrentProcessDirectory(),
+				file.WorkingDirectory(),
+			},
+		),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	r := &Root{}
+
+	r.cmd = &cobra.Command{
 		Use:   "project-name",
 		Short: "Short description of the project",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -32,31 +74,40 @@ var (
 			)
 			_ = cmd.Help()
 		},
+		SilenceErrors: true,
+		SilenceUsage:  true,
 	}
 
-	configOpts = config.DefaultConfigOpts(
-		&config.Opts{
-			EnvPrefix: constants.ViperEnvPrefix,
-		},
+	configOpts.Flags.String(
+		r.KeyProjectRoot(),
+		r.DefaultProjectRoot(),
+		"Project root directory",
 	)
-)
 
-func initConfig() {
-	config.InitConfig(configOpts)
-}
+	r.cmd.PersistentFlags().AddFlagSet(configOpts.Flags)
+	config.ViperBindPFlagSet(r.cmd, configOpts.Flags)
+	_ = r.cmd.ParseFlags(os.Args[1:])
 
-func init() {
-	cobra.OnInitialize(initConfig)
-
-	rootCmd.PersistentFlags().AddFlagSet(configOpts.Flags)
-	config.ViperBindPFlagSet(rootCmd, configOpts.Flags)
-}
-
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
-		os.Exit(1)
+	if err := configOpts.InitConfig(); err != nil {
+		panic(err)
 	}
+
+	return r
+}
+
+func (r *Root) Cmd() *cobra.Command {
+	return r.cmd
+}
+
+// Flags keys, defaults and value getters
+func (r *Root) KeyProjectRoot() string {
+	return "project-root"
+}
+
+func (r *Root) DefaultProjectRoot() string {
+	return strings.ReplaceAll(file.WorkingDirectory(), "\\", "/")
+}
+
+func (r *Root) ProjectRoot() string {
+	return config.ViperGetString(r.cmd, r.KeyProjectRoot())
 }
